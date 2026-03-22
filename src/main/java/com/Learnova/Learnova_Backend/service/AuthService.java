@@ -3,6 +3,7 @@ package com.Learnova.Learnova_Backend.service;
 import com.Learnova.Learnova_Backend.dtos.request.LoginRequest;
 import com.Learnova.Learnova_Backend.dtos.request.SignupRequest;
 import com.Learnova.Learnova_Backend.dtos.response.JwtResponse;
+import com.Learnova.Learnova_Backend.entity.RefreshToken;
 import com.Learnova.Learnova_Backend.entity.User;
 import com.Learnova.Learnova_Backend.repository.UserRepository;
 import com.Learnova.Learnova_Backend.security.jwt.JwtUtils;
@@ -42,6 +43,9 @@ public class AuthService {
         return "User registered successfully";
     }
 
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
     public JwtResponse login(LoginRequest request) {
 
         User user = userRepository.findByEmail(request.getEmail())
@@ -51,9 +55,11 @@ public class AuthService {
             throw new RuntimeException("Invalid password");
         }
 
-        String token = jwtUtils.generateToken(user.getEmail());
+        String accessToken = jwtUtils.generateToken(user.getEmail());
 
-        return new JwtResponse(token);
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user.getId());
+
+        return new JwtResponse(accessToken, refreshToken.getToken());
     }
 
 }
