@@ -54,7 +54,7 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
 
         response.sendRedirect(
-                "https://learnova-frontend-omega.vercel.app//oauth-success?token=" + token
+                "https://learnova-frontend-omega.vercel.app/oauth-success?token=" + token
         );
         response.getWriter().flush();
     }
