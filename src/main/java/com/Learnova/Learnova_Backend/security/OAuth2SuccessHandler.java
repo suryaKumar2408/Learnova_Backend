@@ -7,6 +7,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
@@ -23,6 +24,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
 
     @Autowired
     private JwtUtils jwtUtils;
+
+    // This pulls the URL from your application.properties or Render environment variables
+    @Value("${app.frontend.url}")
+    private String frontendUrl;
 
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
@@ -49,13 +54,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             userRepository.save(user);
         }
 
-
         String token = jwtUtils.generateToken(user.getEmail());
 
-
-        response.sendRedirect(
-                "https://learnova-frontend-omega.vercel.app/oauth-success?token=" + token
-        );
+        // Uses the dynamic frontendUrl variable for the redirect
+        response.sendRedirect(frontendUrl + "/oauth-success?token=" + token);
         response.getWriter().flush();
     }
 }

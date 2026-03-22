@@ -14,7 +14,10 @@ public class CorsConfig {
             @Override
             public void addCorsMappings(CorsRegistry registry) {
                 registry.addMapping("/**")
-                        .allowedOrigins("https://learnova-frontend-omega.vercel.app/")
+                        .allowedOrigins(
+                                "https://learnova-frontend-omega.vercel.app",
+                                "http://localhost:5173"
+                        )
                         .allowedMethods("*")
                         .allowedHeaders("*")
                         .allowCredentials(true);
