@@ -48,7 +48,7 @@ public class AuthController {
         Cookie cookie = new Cookie("accessToken", jwtResponse.getAccessToken());
         cookie.setHttpOnly(true);
         // Note: setSecure(true) requires HTTPS. Set to false for local development.
-        cookie.setSecure(false);
+        cookie.setSecure(true);
         cookie.setPath("/");
         cookie.setMaxAge(7 * 24 * 60 * 60);
         response.addCookie(cookie);
