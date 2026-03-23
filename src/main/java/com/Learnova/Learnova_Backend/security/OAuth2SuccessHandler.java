@@ -4,6 +4,7 @@ import com.Learnova.Learnova_Backend.entity.User;
 import com.Learnova.Learnova_Backend.repository.UserRepository;
 import com.Learnova.Learnova_Backend.security.jwt.JwtUtils;
 import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,7 +26,6 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
     @Autowired
     private JwtUtils jwtUtils;
 
-    // This pulls the URL from your application.properties or Render environment variables
     @Value("${app.frontend.url}")
     private String frontendUrl;
 
@@ -36,12 +36,10 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             throws IOException, ServletException {
 
         OAuth2User oauthUser = (OAuth2User) authentication.getPrincipal();
-
         String email = oauthUser.getAttribute("email");
         String name = oauthUser.getAttribute("name");
 
         Optional<User> existingUser = userRepository.findByEmail(email);
-
         User user;
 
         if (existingUser.isPresent()) {
@@ -50,14 +48,19 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
             user = new User();
             user.setEmail(email);
             user.setFullName(name);
-            user.setPassword(""); // no password for google users
+            user.setPassword("");
             userRepository.save(user);
         }
 
         String token = jwtUtils.generateToken(user.getEmail());
 
-        // Uses the dynamic frontendUrl variable for the redirect
-        response.sendRedirect(frontendUrl + "/oauth-success?token=" + token);
-        response.getWriter().flush();
+        Cookie cookie = new Cookie("accessToken", token);
+        cookie.setHttpOnly(true);
+        cookie.setSecure(false);
+        cookie.setPath("/");
+        cookie.setMaxAge(7 * 24 * 60 * 60);
+        response.addCookie(cookie);
+
+        response.sendRedirect(frontendUrl + "/dashboard");
     }
 }

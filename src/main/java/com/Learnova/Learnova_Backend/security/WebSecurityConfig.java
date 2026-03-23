@@ -15,6 +15,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.config.Customizer;
 
 @Configuration
 @EnableWebSecurity
@@ -40,6 +41,11 @@ public class WebSecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
+                // 1. Enable CORS within Security
+                .cors(Customizer.withDefaults())
+
+                // 2. CSRF Warning: Keep disabled for now if you are in development,
+                // but consider implementing a CSRF token for production cookies.
                 .csrf(csrf -> csrf.disable())
 
                 .sessionManagement(session -> session
@@ -50,7 +56,6 @@ public class WebSecurityConfig {
                         .requestMatchers("/auth/**", "/oauth2/**").permitAll()
                         .anyRequest().authenticated()
                 )
-
 
                 .exceptionHandling(ex -> ex
                         .authenticationEntryPoint((req, res, excep) -> {
