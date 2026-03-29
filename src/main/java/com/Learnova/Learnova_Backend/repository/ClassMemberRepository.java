@@ -8,6 +8,8 @@ import java.util.Optional;
 
 public interface ClassMemberRepository extends MongoRepository<ClassMember, String> {
 
+    List<ClassMember> findByClassId(String classId);
+
     List<ClassMember> findByUserId(String userId);
 
     boolean existsByUserIdAndClassId(String userId, String classId);
@@ -15,4 +17,8 @@ public interface ClassMemberRepository extends MongoRepository<ClassMember, Stri
     Optional<ClassMember> findByUserIdAndClassId(String userId, String classId);
 
     void deleteByClassId(String classId);
+
+    long countByClassIdAndRole(String classId, String role);
+
+    void deleteByUserIdAndClassId(String userId, String classId);
 }

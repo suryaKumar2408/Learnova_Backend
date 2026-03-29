@@ -61,4 +61,19 @@ public class ClassroomController {
                 classroomService.deleteClass(classId, getCurrentUserId())
         );
     }
+    @GetMapping("/{classId}")
+    public ResponseEntity<?> getClassDetails(@PathVariable String classId) {
+
+        return ResponseEntity.ok(
+                classroomService.getClassDetails(classId)
+        );
+    }
+    @PostMapping("/{classId}/leave")
+    public ResponseEntity<?> leaveClass(@PathVariable String classId) {
+
+        return ResponseEntity.ok(
+                classroomService.leaveClass(classId, getCurrentUserId())
+        );
+    }
+
 }

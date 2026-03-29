@@ -1,12 +1,16 @@
 package com.Learnova.Learnova_Backend.service;
 
 import com.Learnova.Learnova_Backend.dtos.request.CreateClassRequest;
+import com.Learnova.Learnova_Backend.dtos.response.ClassDetailsResponse;
 import com.Learnova.Learnova_Backend.dtos.response.CreateClassResponse;
 import com.Learnova.Learnova_Backend.dtos.response.MyClassesResponse;
+import com.Learnova.Learnova_Backend.dtos.response.UserResponse;
 import com.Learnova.Learnova_Backend.entity.ClassMember;
 import com.Learnova.Learnova_Backend.entity.Classroom;
+import com.Learnova.Learnova_Backend.entity.User;
 import com.Learnova.Learnova_Backend.repository.ClassMemberRepository;
 import com.Learnova.Learnova_Backend.repository.ClassroomRepository;
+import com.Learnova.Learnova_Backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -20,6 +24,7 @@ public class ClassroomService {
 
     private final ClassroomRepository classroomRepo;
     private final ClassMemberRepository memberRepo;
+    private final UserRepository userRepository;
 
     public CreateClassResponse createClass(CreateClassRequest req, String userId) {
 
@@ -153,5 +158,72 @@ public class ClassroomService {
         classroomRepo.deleteById(classId);
 
         return "Class deleted successfully";
+    }
+    public ClassDetailsResponse getClassDetails(String classId) {
+
+        //  Get class
+        Classroom classroom = classroomRepo.findById(classId)
+                .orElseThrow(() -> new RuntimeException("Class not found"));
+
+        //  Get all members
+        List<ClassMember> members = memberRepo.findByClassId(classId);
+
+        //  Separate userIds
+        List<String> coordinatorIds = members.stream()
+                .filter(m -> "COORDINATOR".equals(m.getRole()))
+                .map(ClassMember::getUserId)
+                .toList();
+
+        List<String> studentIds = members.stream()
+                .filter(m -> "STUDENT".equals(m.getRole()))
+                .map(ClassMember::getUserId)
+                .toList();
+
+        //  Convert User → UserResponse (SAFE)
+        List<UserResponse> coordinators = userRepository.findAllById(coordinatorIds)
+                .stream()
+                .map(user -> UserResponse.builder()
+                        .id(user.getId())
+                        .fullName(user.getFullName())
+                        .email(user.getEmail())
+                        .build())
+                .toList();
+
+        List<UserResponse> students = userRepository.findAllById(studentIds)
+                .stream()
+                .map(user -> UserResponse.builder()
+                        .id(user.getId())
+                        .fullName(user.getFullName())
+                        .email(user.getEmail())
+                        .build())
+                .toList();
+
+        // Build response
+        return ClassDetailsResponse.builder()
+                .classroom(classroom)
+                .coordinators(coordinators)
+                .students(students)
+                .build();
+    }
+    public String leaveClass(String classId, String userId) {
+
+        // Check membership
+        ClassMember member = memberRepo.findByUserIdAndClassId(userId, classId)
+                .orElseThrow(() -> new RuntimeException("You are not a member of this class"));
+
+        //  If coordinator → check count
+        if ("COORDINATOR".equals(member.getRole())) {
+
+            long coordinatorCount = memberRepo.countByClassIdAndRole(classId, "COORDINATOR");
+
+            if (coordinatorCount <= 1) {
+                throw new RuntimeException("Cannot leave. You are the only coordinator.");
+            }
+        }
+
+        //  Remove membership
+        memberRepo.deleteByUserIdAndClassId(userId, classId);
+
+        return "Left class successfully";
     }
 }
