@@ -2,6 +2,7 @@ package com.Learnova.Learnova_Backend.service;
 
 import com.Learnova.Learnova_Backend.dtos.request.CreateClassRequest;
 import com.Learnova.Learnova_Backend.dtos.response.CreateClassResponse;
+import com.Learnova.Learnova_Backend.dtos.response.MyClassesResponse;
 import com.Learnova.Learnova_Backend.entity.ClassMember;
 import com.Learnova.Learnova_Backend.entity.Classroom;
 import com.Learnova.Learnova_Backend.repository.ClassMemberRepository;
@@ -10,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Random;
 
 @Service
@@ -106,5 +108,50 @@ public class ClassroomService {
         }
 
         return "Joined successfully";
+    }
+    public MyClassesResponse getMyClasses(String userId) {
+
+        //  Get created classes
+        List<Classroom> createdClasses = classroomRepo.findByCreatedBy(userId);
+
+        //  Get memberships
+        List<ClassMember> memberships = memberRepo.findByUserId(userId);
+
+        //  Extract classIds
+        List<String> classIds = memberships.stream()
+                .map(ClassMember::getClassId)
+                .toList();
+
+        //  Fetch joined classes
+        List<Classroom> joinedClasses = classroomRepo.findAllById(classIds);
+
+        return MyClassesResponse.builder()
+                .created(createdClasses)
+                .joined(joinedClasses)
+                .build();
+    }
+
+    public String deleteClass(String classId, String userId) {
+
+        //  Find class
+        Classroom classroom = classroomRepo.findById(classId)
+                .orElseThrow(() -> new RuntimeException("Class not found"));
+
+        //  Check membership
+        ClassMember member = memberRepo.findByUserIdAndClassId(userId, classId)
+                .orElseThrow(() -> new RuntimeException("You are not a member of this class"));
+
+        //  Check role
+        if (!"COORDINATOR".equals(member.getRole())) {
+            throw new RuntimeException("Only coordinator can delete this class");
+        }
+
+        //  Delete all members
+        memberRepo.deleteByClassId(classId);
+
+        //  Delete class
+        classroomRepo.deleteById(classId);
+
+        return "Class deleted successfully";
     }
 }

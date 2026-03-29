@@ -47,4 +47,18 @@ public class ClassroomController {
                 classroomService.joinClass(request.getCode(), getCurrentUserId())
         );
     }
+    @GetMapping("/my")
+    public ResponseEntity<?> getMyClasses() {
+
+        return ResponseEntity.ok(
+                classroomService.getMyClasses(getCurrentUserId())
+        );
+    }
+    @DeleteMapping("/{classId}")
+    public ResponseEntity<?> deleteClass(@PathVariable String classId) {
+
+        return ResponseEntity.ok(
+                classroomService.deleteClass(classId, getCurrentUserId())
+        );
+    }
 }
